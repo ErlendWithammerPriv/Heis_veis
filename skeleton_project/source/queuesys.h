@@ -3,7 +3,7 @@
 #include "hardware.h"
 #include <stdio.h>
 #include <stdlib.h>
-#define ORDER_QUEUE_SIZE 2*HARDWARE_NUMBER_OF_FLOORS
+
 struct Order
 {
     HardwareOrder type;
