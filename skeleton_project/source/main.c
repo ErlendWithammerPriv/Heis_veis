@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include "queuesys.h"
 #include "drive.h"
+#include "buttons.h"
 
 static void clear_all_order_lights(){
     HardwareOrder order_types[3] = {
@@ -77,70 +78,41 @@ int main(){
     head.next = NULL;
     last_floor =1;
     ordercount = 0;
-    struct Order o1 ={.type=HARDWARE_ORDER_UP, .floor=2};
-    struct Order o2 ={.type=HARDWARE_ORDER_DOWN, .floor=2};
-    struct Order o3 ={.type=HARDWARE_ORDER_UP, .floor=4};
-    struct Order o4 ={.type=HARDWARE_ORDER_UP, .floor=1};
-    struct Order o5 ={.type=HARDWARE_ORDER_INSIDE, .floor=2};
-    struct Order o6 ={.type=HARDWARE_ORDER_INSIDE, .floor=2};
-    struct Order o7 ={.type=HARDWARE_ORDER_INSIDE, .floor=3};
-
-    printf("Hello elevator\n");
-
-  /*  printf("o1: \t");
-    add_node(o1);
-    printf("o2: \t");
-    add_node(o2);
-    printf("o3: \t");
-    add_node(o3);
-    printf("o4: \t");
-    add_node(o4);
-    printf("o5: \t");
-    add_node(o5);
-    printf("o6: \t");
-    add_node(o6);*/
-    printf("o7: \t");
-    add_node(o7);
-
-    print_queue();
-
+    
  
     int error = hardware_init();
+   
     if(error != 0){
         fprintf(stderr, "Unable to initialize hardware\n");
         exit(1);
-    }
-
+    } 
+    
+    clear_all_order_lights();
+    int undefined_floor=1;
     while(1){
-        if(hardware_read_stop_signal()){
-            hardware_command_movement(HARDWARE_MOVEMENT_STOP);
-            break;
+        
+        for(int f = 0; f < HARDWARE_NUMBER_OF_FLOORS; f++){
+            if(hardware_read_floor_sensor(f)){
+                undefined_floor = 0;
+            }
         }
-
-        //Code block that makes the elevator go up when it reach the botton
-        if(hardware_read_floor_sensor(0)){
-            hardware_command_movement(HARDWARE_MOVEMENT_UP);
+        
+        if(undefined_floor){
+            drive_to_first();
         }
-
-        // Code block that makes the elevator go down when it reach the top floor
-        if(hardware_read_floor_sensor(HARDWARE_NUMBER_OF_FLOORS - 1)){
-            hardware_command_movement(HARDWARE_MOVEMENT_DOWN);
-        }
-
+        
         update_last_floor();
         if(ordercount){
             printf("ordercount = %d \n",ordercount);
             drive_lift();
         }
-        print_queue();
-        // Code to clear all lights given the obstruction signal 
-        if(hardware_read_obstruction_signal()){
-            hardware_command_stop_light(1);
+        if(!ordercount){
             clear_all_order_lights();
         }
-        else{
-            hardware_command_stop_light(0);
-        }
+        read_buttons();
+        
+        print_queue();
+
     }
 
     return 0;

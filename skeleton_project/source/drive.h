@@ -6,7 +6,9 @@
 #include <unistd.h>
 #include "queuesys.h"
 #include "timer.h"
+#include "buttons.h"
 
 int drive_lift();
+int drive_to_first();
 
 #endif
